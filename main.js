@@ -1,41 +1,36 @@
 const http = require('http');
 const url = require('url');
+const querystring = require('querystring');
 
 const server = http.createServer((req, res) => {
-  // TODO: Implement this function
-  const { method, headers, url: reqUrl } = req;
-  const parsedUrl = url.parse(reqUrl, true);
-  let body = '';
+  const parsedUrl = url.parse(req.url, true);
+  const method = req.method;
+  const path = parsedUrl.pathname;
+  const query = parsedUrl.query;
 
+  let body = '';
   req.on('data', chunk => {
     body += chunk.toString();
   });
 
   req.on('end', () => {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-
-    const response = {
+    const parsedBody = querystring.parse(body);
+    
+    const responseObj = {
       method,
-      headers,
-      url: reqUrl,
-      query: parsedUrl.query,
+      path,
+      query,
+      body: parsedBody,
     };
 
-    if (body) {
-      try {
-        response.body = JSON.parse(body);
-      } catch (e) {
-        response.body = body;
-      }
-    }
+   
 
-    res.end(JSON.stringify(response, null, 2));
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(responseObj));
   });
 });
 
-server.listen(3000, () => {
-  console.log('Server is listening on port 3000');
-});
+/* we just simply export the server object, we donot start the server itself. */
 
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
